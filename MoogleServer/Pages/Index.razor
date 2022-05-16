@@ -2,15 +2,18 @@
 
 <PageTitle>Moogle!</PageTitle>
 
-<h1>🔍 Moogle!</h1>
+<h1 class="maintitle"><span class="in-title">🔍</span> Moogle!</h1>
+<div class="container-form">
+    <input class="p-1 my-4" @bind="query" placeholder="Introduzca su búsqueda">
 
-<input class="p-1 my-4" @bind="query" placeholder="Introduzca su búsqueda">
+    <button type="default" class="btn btn-primary" @onclick="RunQuery">🔍 Buscar</button>
+</div>
 
-<button type="default" class="btn btn-primary" @onclick="RunQuery">🔍 Buscar</button>
 
 @if (!string.IsNullOrEmpty(result.Suggestion)) {
+    <hr style="margin-top: -10px">
     <div class="suggestion">
-        <p>¿Quisite decir <strong><a href="#">@result.Suggestion</a></strong>?</p>
+        <p>¿Quisiste decir <strong><a href="#">@result.Suggestion</a></strong>?</p>
     </div>
 }
 
@@ -33,3 +36,4 @@
         result = Moogle.Query(query);
     }
 }
+
