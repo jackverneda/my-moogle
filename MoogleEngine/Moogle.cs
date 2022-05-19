@@ -4,15 +4,14 @@
 public static class Moogle
 {
     public static SearchResult Query(string query) {
-        // Modifique este método para responder a la búsqueda
-
-        SearchItem[] items = new SearchItem[5] {
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.9f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.5f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.1f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.1f),
-            new SearchItem("Hello World", "Lorem ipsum dolor sit amet", 0.1f),
-        };
+        DataVector A= new DataVector();
+        List<KeyValuePair<double, int>> V= DataVector.getresponse(query, A);
+        int n= Math.Min(V.Count,3);
+        SearchItem[] items = new SearchItem[3];
+        
+        for(int i=0; i<n;i++){
+            items[i]= new SearchItem(A.docpaths[V[i].Value], TextReading.readdoc(A.docpaths[V[i].Value]),((float)V[i].Key));
+        }
 
         return new SearchResult(items, query);
     }
