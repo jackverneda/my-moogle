@@ -43,7 +43,10 @@ public class StringHandling {
                         result+= "u";
                         break;
                     default:
-                        if(copys[i]>='a' && copys[i]<='z')
+                        if((copys[i]>='a' && copys[i]<='z') || copys[i]=='1' ||
+                             copys[i]=='2' || copys[i]=='3' || copys[i]=='4' ||
+                             copys[i]=='5' || copys[i]=='6' || copys[i]=='7' ||
+                             copys[i]=='8' || copys[i]=='9' || copys[i]=='8' )
                             result += copys[i];
                         break;
                 }
