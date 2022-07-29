@@ -22,7 +22,7 @@ public class StringHandling {
         return M[s1.Length, s2.Length];
     }
     //this method make the string normal
-    public static string normalize(string s){
+    public static string normalize(string s, string param=""){
             string copys = s.ToLower();
             string result="";
             for(int i=0; i<copys.Length; i++){
@@ -46,8 +46,16 @@ public class StringHandling {
                         if((copys[i]>='a' && copys[i]<='z') || copys[i]=='1' ||
                              copys[i]=='2' || copys[i]=='3' || copys[i]=='4' ||
                              copys[i]=='5' || copys[i]=='6' || copys[i]=='7' ||
-                             copys[i]=='8' || copys[i]=='9' || copys[i]=='8' )
+                             copys[i]=='8' || copys[i]=='9' || copys[i]=='8' ){
                             result += copys[i];
+                            break;
+                        }
+                        for(int j=0;j<param.Length;j++){
+                            if(copys[i]==param[j]){
+                                result += copys[i];
+                                break;
+                            }
+                        }
                         break;
                 }
                 

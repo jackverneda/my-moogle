@@ -1,9 +1,28 @@
-﻿@page "/"
+﻿
+
+
+@if(modal){
+
+<div class="backdrop-container"  >
+    <div class="backdrop-inner">
+        <div class=btn-container>
+            <button type="default" class="btn btn-danger" @onclick="closemodal">X</button>
+        </div>
+        <div class="content-container">
+            <h3>@modaltitle</h3>
+            <p>@modalp</p>
+        </div>
+    </div>
+
+</div>
+}
+
+@page "/"
 
 <PageTitle>Moogle!</PageTitle>
 <div id="main-container" style="margin: 25vh auto">
 
-    <h1 class="maintitle"><span class="in-title">🔍</span>
+    <h1 class="maintitle">
         <span style="color: rgb(26,115,232)">M</span>
         <span style="color: rgb(224,63,44)">o</span>
         <span style="color: rgb(252,196,36)">o</span>
@@ -35,27 +54,40 @@
     </div>
 }
 
-<ul class="results">
+<div class="results">
 @foreach (var item in result.Items()) {
     @if(item.Score!=0){
 
         <div class="container-item">
-            <li>
-                <div class="item">
+            <a class="item" @onclick="@(e => openmodal(item.Title, item.Path))" >
+                <div >
                     <h3 class="title">@item.Title</h3>
                     <p>... @item.Snippet ...</p>
                 </div>
-            </li>
+            </a>
         </div>
     }
 }
-</ul>
+</div>
 
 @code {
     private string query = "";
+    private bool modal= false;
+    private string modalp= "";
+    private string modaltitle= "";
     
     private SearchResult result = new SearchResult();
 
+    private void closemodal(){
+        modal=false;
+        modalp="";
+        modaltitle="";
+    }
+    private void openmodal(string a, string b){
+        modal=true;
+        modaltitle=a;
+        modalp= TextReading.readdoc(b);
+    }
     private void RunQuery() {
         if(query!="")
             result = Moogle.Query(query);

@@ -1,6 +1,6 @@
 public class TextReading{
 
-    static string globalpath= "/home/jackson/Escritorio/c#/moogle/Content";
+    static string globalpath= "/Users/jack/Documents/moogle/Content";
 
     //This method reads the path of all the docs inside the Content file
     public static List<string> getdocs(){

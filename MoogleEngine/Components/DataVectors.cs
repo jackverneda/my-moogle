@@ -2,7 +2,7 @@ public class DataVector {
     
     public List<string> docpaths = TextReading.getdocs();
     public List<string[]> TokenList= new List<string[]>();
-    public List<string> posibletokens= new List<string>();
+    public List<string> possibletokens= new List<string>();
     public Dictionary<string, double>[] TF= new Dictionary<string,double>[0];
     public Dictionary<string, double> words= new Dictionary<string, double>();
     public int n= 0;
@@ -10,107 +10,146 @@ public class DataVector {
         n=docpaths.Count;
         for(int i =0; i<n;i++){
             string s = TextReading.readdoc(docpaths[i]);
-            TokenList.Add(s.Split(' ', '.', ',',':',';'));
+            TokenList.Add(s.Split('`', '~', '¡', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-',
+                                '_', '=', '+', '[', '{', ']', '}', '|', ';', ':', '"', ',', '<',
+                                '.', '>', '/', '¿', '?', ' ', '«', '»', '—', '\n', '\r'));
         }
 
     }
-    public static void ex_tf(string[] tokens, Dictionary<string, double> dic){
+    public static Dictionary<string,double> ex_tf(string[] tokens,bool queryble= false){
+        Dictionary<string, double> dic= new Dictionary<string, double>();
         double maxfreq= 0;
         for(int j=0; j<tokens.Length; j++){
-            string ss= StringHandling.normalize(tokens[j]);
-            if(dic.ContainsKey(ss)){
-                dic[ss]++;
-                maxfreq =Math.Max(maxfreq, dic[ss]);
-            } else {
-                dic.Add(ss, 1);
-                maxfreq =Math.Max(maxfreq, dic[ss]);
+            string ss= StringHandling.normalize(tokens[j], queryble? "*!": "");
+            if(ss!=""){
+                if(dic.ContainsKey(ss)){
+                    dic[ss]++;
+                } else if(queryble){
+                    if(ss[ss.Length- 1]=='*'){
+                        dic.Add(ss = ss.Substring(0,ss.Length-1),100);
+                        tokens[j]=ss;
+                    }
+                    else if(ss[0]=='!'){
+                        dic.Add(ss = ss.Substring(1,ss.Length-1),-100);
+                        tokens[j]=ss;
+                    }
+                    else
+                        dic.Add(ss, 1.0);
+                } else {
+                     dic.Add(ss, 1.0);
+                }
+                maxfreq = Math.Max(maxfreq, dic[ss]);
             }
         }
+
         foreach(KeyValuePair<string, double> pair in dic){
-            dic[pair.Key]/=maxfreq*(-1);
+            dic[pair.Key]= dic[pair.Key]>0 ? dic[pair.Key]/maxfreq*(-1.0) : 0;
+            // dic[pair.Key]/=tokens.Length*(-1.0);
         } 
+        return dic;
     }
     private void filltf(){
         TF= new Dictionary<string, double>[n];
         for(int i=0; i<n; i++){
-            TF[i]= new Dictionary<string,double>();
-            ex_tf(TokenList[i],TF[i]);
+            TF[i]= ex_tf(TokenList[i]);
         } 
     }
     private void fillidf(){
         for(int i=0;i<n;i++){
             foreach(KeyValuePair<string,double> pair in TF[i]){
-                int ni=1;
-                for(int j=i+1;j<n;j++){
-                    if(TF[j].ContainsKey(pair.Key)){
-                        ni++;
-                    }
-                }
-                for(int j=i;j<n;j++){
-                    if(TF[j].ContainsKey(pair.Key) && TF[j][pair.Key]<0){
-                        TF[j][pair.Key]*=Math.Log2(n/ni)*(-1);
-                        if(!words.ContainsKey(pair.Key))
-                            words.Add(pair.Key,TF[j][pair.Key]);
-                            posibletokens.Add(pair.Key);
-                    }
+                if(pair.Value<0){
+                    int ni=1;
+
+                    for(int j=i+1;j<n;j++)
+                        if(TF[j].ContainsKey(pair.Key))
+                            ni++;
+                        
+                    double log=Math.Log(n/ni);
+
+                    for(int j=i;j<n;j++)
+                        if(TF[j].ContainsKey(pair.Key))
+                            TF[j][pair.Key]*=log*(-1.0);
+                            
+                    words.Add(pair.Key,log);
+                    possibletokens.Add(pair.Key);
                 }
             }
         }
     }
+    
+    //Calculates the cos between two vectors
     public static double CompatibleScore(Dictionary<string, double> A, Dictionary<string, double> B){
-        double suma1=0;
-        double suma2=0;
-        double suma3=0;
+        double sumaw=0;
+        double sumad=0;
+        double sumaq=0;
+
         foreach(KeyValuePair<string,double> pair in A){
-            suma3+= pair.Value*pair.Value;
-            if(B.ContainsKey(pair.Key) && B[pair.Key]!=0){
-                suma1+= pair.Value*B[pair.Key];
-                suma2+= B[pair.Key]*B[pair.Key]; 
-            } else if(!B.ContainsKey(pair.Key)){
-                int nsimword = 1;
-                string simword=pair.Key;
-                double vsimword= 0;
-                foreach(KeyValuePair<string,double> possiblepair in B){
-                    int edscore=StringHandling.EditDistance(pair.Key,possiblepair.Key);
-                    if(edscore<nsimword){
-                        simword=possiblepair.Key;
-                        nsimword=edscore;
-                        vsimword=possiblepair.Value;
-                        // Console.WriteLine(simword);
-                    }
-                    else if((edscore==nsimword) && (possiblepair.Value>vsimword)){
-                        simword=possiblepair.Key;
-                        nsimword=edscore;
-                        vsimword=possiblepair.Value;
-                        // Console.WriteLine(simword);
-                    }
-                }
-                if(simword!=pair.Key && B[simword]!=0){
-                    suma1+= B[simword]*B[simword];
-                    suma2+= B[simword]*B[simword];
-                }
-            }
+            sumaq+= pair.Value*pair.Value;
+            if(B.ContainsKey(pair.Key)){
+                sumaw+= pair.Value*B[pair.Key];
+                sumad+= B[pair.Key]*B[pair.Key]; 
+            } 
+        
         }
-        // Console.WriteLine($"suma 1: {suma1}, suma 2: {suma2}, suma 3: {suma3}");
-         double result= suma1/(Math.Sqrt(suma2)*Math.Sqrt(suma3));
-        return result>=0 && result<=1? result: 0 ;    
+        double result = (sumad!=0 && sumaq!=0)? sumaw/Math.Sqrt(sumad*sumaq): 0;
+        return (result>=0)? result : 0 ;    
     }
-    public static List<KeyValuePair<double, int>> getresponse(string query, DataVector A){
-        List<KeyValuePair<double, int>> response= new List<KeyValuePair<double, int>>();
+    private static void tokenValidator(string[] tokens,DataVector A){
+        for(int i=0;i<tokens.Length;i++){
+            string ss=StringHandling.normalize(tokens[i]);
+            if(!A.words.ContainsKey(ss)){
+                int nsimword = 1;
+                string simword=ss;
+                double vsimword= 0;
+                for(int j=0;j<A.possibletokens.Count;j++){
+                    int edscore=StringHandling.EditDistance(A.possibletokens[j],ss);
+                    double vscore=A.words[A.possibletokens[j]];
+                    if(edscore<nsimword){
+                        simword=A.possibletokens[j];
+                        nsimword=edscore;
+                        vsimword=vscore;
+                    }
+                    else if((edscore==nsimword) && (vscore>vsimword)){
+                        simword=A.possibletokens[j];
+                        nsimword=edscore;
+                        vsimword=vscore;
+                    }
+                }
+                if(simword!=ss){
+                    tokens[i]=ss;
+                }
+
+            }
+        } 
+    }
+    public static KeyValuePair<string,List<KeyValuePair<double, int>>> getresponse(string query, DataVector A){
+        
         string[] tokens = query.Split(' ','.',',');
-        Dictionary<string,double> dics= new Dictionary<string, double>();
-        DataVector.ex_tf(tokens, dics);
+        tokenValidator(tokens,A);
+        Dictionary<string,double> dics = ex_tf(tokens, true);
+        
+        //IDF to the query
         foreach(KeyValuePair<string, double> pair in dics){
-            double a= A.words.ContainsKey(pair.Key)? A.words[pair.Key]: 0;
-            dics[pair.Key]= 0.4+((-0.6)*pair.Value)*a;
+            double a = A.words.ContainsKey(pair.Key)? A.words[pair.Key]: 0.0;
+            //aqui iria edit distance
+            dics[pair.Key] =  (0.4 + (-0.6)*dics[pair.Key])*a;
+            
         }
-        for(int i=0; i<A.n;i++){
+
+        List<KeyValuePair<double, int>> response = new  List<KeyValuePair<double, int>>();
+        for(int i=0; i < A.n;i++){
             double result = DataVector.CompatibleScore(dics,A.TF[i]);
             response.Add(new KeyValuePair<double, int>(result, i));
         }
+
+        string suggestion="";
+        for(int i=0;i<tokens.Length;i++){
+            suggestion += tokens[i]+" ";
+        }
+
         response.Sort((x,y) => x.Key.CompareTo(y.Key));
         response.Reverse();
-        return response;
+        return new KeyValuePair< string, List<KeyValuePair<double,int>> > (suggestion, response);
     }
     
     public DataVector(){
