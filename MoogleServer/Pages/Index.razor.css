@@ -24,6 +24,7 @@
 }
 input{
     width: 30vw;
+    border-color: black;
     border-radius: 16px;
 }
 button{
@@ -61,7 +62,6 @@ button{
     margin-bottom: 20px ;
     background-color: transparent;
     border-radius: 20px;
-    padding: 10px;
     box-shadow: 5px 5px 10px #a6a5a5;
     text-align: left !important;
 }
@@ -77,9 +77,12 @@ button{
 .backdrop-inner{
     width: 75vw;
     height: 75vh;
+    border-radius: 20px;
+    padding: 10px;
     background-color: white;
     margin: 12.5vh auto ;
     overflow: scroll;
+    box-shadow: 5px 10px 50px #373535;
 }
 .btn-container{
     height: contain;

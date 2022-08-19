@@ -2,19 +2,25 @@
 
 
 @if(modal){
-
-<div class="backdrop-container"  >
-    <div class="backdrop-inner">
-        <div class=btn-container>
-            <button type="default" class="btn btn-danger" @onclick="closemodal">X</button>
-        </div>
-        <div class="content-container">
-            <h3>@modaltitle</h3>
-            <p>@modalp</p>
+    <div class="backdrop-container"  >
+        <div class="backdrop-inner ">
+            <div class=btn-container>
+                <button type="default" class="btn btn-danger" @onclick="closemodal">X</button>
+            </div>
+            <div class="content-container">
+                <h3>@modaltitle</h3>
+                <p>
+                    @foreach (var (item, index) in TextReading.readlines(@modalpath).Select((value, i) => (value, i))){
+                        @(item + " ")
+                        if (item == ""){
+                            <br/>
+                            <br/>
+                        }
+                    }   
+                </p>
+            </div>
         </div>
     </div>
-
-</div>
 }
 
 @page "/"
@@ -73,20 +79,20 @@
 @code {
     private string query = "";
     private bool modal= false;
-    private string modalp= "";
+    private string modalpath= "";
     private string modaltitle= "";
     
     private SearchResult result = new SearchResult();
 
     private void closemodal(){
         modal=false;
-        modalp="";
+        modalpath="";
         modaltitle="";
     }
     private void openmodal(string a, string b){
         modal=true;
         modaltitle=a;
-        modalp= TextReading.readdoc(b);
+        modalpath = b;
     }
     private void RunQuery() {
         if(query!="")

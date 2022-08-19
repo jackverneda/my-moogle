@@ -94,9 +94,12 @@ public class DataVector {
         double result = (sumad!=0 && sumaq!=0)? sumaw/Math.Sqrt(sumad*sumaq): 0;
         return (result>=0)? result : 0 ;    
     }
+
+    // normalizes all words in a token vector
     private static void tokenValidator(string[] tokens,DataVector A){
         for(int i=0;i<tokens.Length;i++){
             string ss=StringHandling.normalize(tokens[i]);
+            // aqui debo validar si el string resultante de normalizar es vacio
             if(!A.words.ContainsKey(ss)){
                 int nsimword = 1;
                 string simword=ss;
@@ -116,10 +119,11 @@ public class DataVector {
                     }
                 }
                 if(simword!=ss){
-                    tokens[i]=ss;
+                  ss=simword;  
                 }
 
             }
+            tokens[i]=ss;
         } 
     }
     public static KeyValuePair<string,List<KeyValuePair<double, int>>> getresponse(string query, DataVector A){

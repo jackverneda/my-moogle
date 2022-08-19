@@ -16,5 +16,13 @@ public class TextReading{
         return File.ReadAllText(path, System.Text.Encoding.UTF8);
     }
 
+    public static List<string> readlines(string path){
+        string[] doc = File.ReadAllLines(path);
+        List<string> words = new List<string>();
+        for (int i = 0; i < doc.Length; i++)
+            words.Add(doc[i]);
+        
+        return words;
+    }
 
 }
