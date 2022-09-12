@@ -11,9 +11,10 @@ public static class Moogle
         SearchItem[] items = new SearchItem[n];
 
         if(V.Value[0].Key==0){
-            items= new SearchItem[1];
-            items[0]= new SearchItem("", "Lo siento, no se hallaron conincidencias :( ",-1f,"");
-            return new SearchResult(items, "Moogle");
+            // items= new SearchItem[1];
+            // items[0]= new SearchItem("", "Lo siento, no se hallaron conincidencias :( ",-1f,"");
+            return new SearchResult(new SearchItem[0], "Moogle*");
+            
         }
         
         for(int i=0; i<n;i++){

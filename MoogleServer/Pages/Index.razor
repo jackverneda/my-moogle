@@ -1,5 +1,4 @@
-﻿
-
+﻿@* Implementar spinner *@
 
 @if(modal){
     <div class="backdrop-container"  >
@@ -25,7 +24,7 @@
 
 @page "/"
 
-<PageTitle>Moogle!</PageTitle>
+<PageTitle>Moogle</PageTitle>
 <div id="main-container" style="margin: 25vh auto">
 
     <h1 class="maintitle">
@@ -36,27 +35,49 @@
         <span style="color: rgb(63,149,69)">l</span>
         <span style="color: rgb(224,63,44)">e</span>
     </h1>
+    
     <div class="container-form">
-        <input id="form-input" class="p-1 my-4" @bind="query" placeholder="🔍Introduzca su búsqueda">
-
-        <button  type="default" class="btn btn-primary" @onclick="RunQuery">Buscar</button>
+        <input id="form-input"
+                class="p-1 my-4" 
+                @bind="query" 
+                placeholder="Haz una búsqueda en Moogle ;)" 
+                @onkeyup="@Enter"
+                @oninput="@(e=> {query=(string)e.Value;})"
+                >
+        <span class="material-symbols-outlined"  
+              @onclick="RunQuery"
+              id="search-icon"
+              >search</span>
+        @if(query!=""){
+            <span class="material-symbols-outlined"  
+                @onclick="@(e => {query="";})"
+                id="clear-icon"
+                >close</span>
+        }
+        
     </div>
+    
 </div>
 
 
 @if (!string.IsNullOrEmpty(result.Suggestion)) {
     <style>
         #main-container{
-            margin: 0 !important;
-
-            .in-title{
-                font-size: 3rem !important;
-            }
+            margin: 0 !important;  
+        }
+        .maintitle{
+            font-size: 4rem !important;
         }
     </style>
     <hr style="margin-top: -10px">
     <div class="suggestion">
-        <p>¿Quisiste decir <strong><a href="#">@result.Suggestion</a></strong>?</p>
+        <p>¿Quisiste decir 
+            <strong>
+                <a class="suggestion-a" 
+                   @onclick="@( e => {query= result.Suggestion; RunQuery();})" 
+                   >@result.Suggestion</a>
+            </strong>?
+        </p>
     </div>
 }
 
@@ -76,7 +97,13 @@
 }
 </div>
 
+@if(result.Suggestion=="Moogle*"){
+    <h4>Lo sentimos no se encontraron coincidecias :(</h4>
+}
+
 @code {
+    [Inject] private IJSRuntime _js { get; set; }
+
     private string query = "";
     private bool modal= false;
     private string modalpath= "";
@@ -94,9 +121,17 @@
         modaltitle=a;
         modalpath = b;
     }
-    private void RunQuery() {
+    private async Task RunQuery() {
         if(query!="")
             result = Moogle.Query(query);
+        
+        else
+            await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");
     }
+
+    public void Enter(KeyboardEventArgs e){
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+            RunQuery();
+    }   
 }
 
