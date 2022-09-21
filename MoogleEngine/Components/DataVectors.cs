@@ -160,6 +160,7 @@ public class DataVector {
         fill();
         filltf();
         fillidf();
+        MoogleEngine.Moogle.loading=false;
     }
 
 

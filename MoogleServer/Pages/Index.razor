@@ -1,5 +1,10 @@
-﻿@* Implementar spinner *@
-
+﻿@* Spinner (Cargando) *@
+@if(Moogle.loading){
+    <div class="backdrop-container"  >
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>    
+    </div>
+}
+@* Modal para visualizar textos *@
 @if(modal){
     <div class="backdrop-container"  >
         <div class="backdrop-inner ">
@@ -29,11 +34,11 @@
 
     <h1 class="maintitle">
         <span style="color: rgb(26,115,232)">M</span>
-        <span style="color: rgb(224,63,44)">o</span>
+        <span style="color: rgb(224,63,44)" >o</span>
         <span style="color: rgb(252,196,36)">o</span>
         <span style="color: rgb(26,115,232)">g</span>
-        <span style="color: rgb(63,149,69)">l</span>
-        <span style="color: rgb(224,63,44)">e</span>
+        <span style="color: rgb(63,149,69)" >l</span>
+        <span style="color: rgb(224,63,44)" >e</span>
     </h1>
     
     <div class="container-form">
@@ -122,9 +127,11 @@
         modalpath = b;
     }
     private async Task RunQuery() {
-        if(query!="")
+        if(query!=""){
+            Moogle.loading=true;
             result = Moogle.Query(query);
-        
+            Moogle.loading=false;
+        }
         else
             await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");
     }

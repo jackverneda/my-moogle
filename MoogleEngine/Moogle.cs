@@ -3,8 +3,8 @@
 
 public static class Moogle
 {
-    public static DataVector A= new DataVector();
-
+    public static bool loading = true;
+    public static DataVector A = new DataVector();
     public static SearchResult Query(string query) {
         KeyValuePair<string,List<KeyValuePair<double, int>>> V= DataVector.getresponse(query, A);
         int n= V.Value.Count;
