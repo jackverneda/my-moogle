@@ -1,8 +1,14 @@
 ﻿@* Spinner (Cargando) *@
-@if(Moogle.loading){
-    <div class="backdrop-container"  >
+@if(MoogleEngine.Moogle.loading){
+    <div class="backdrop-container bdc-white"  >
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>    
     </div>
+
+    <style>
+        #main-page{
+            filter: blur(5px) !important;
+        }
+    </style>
 }
 @* Modal para visualizar textos *@
 @if(modal){
@@ -15,7 +21,7 @@
                 <h3>@modaltitle</h3>
                 <p>
                     @foreach (var (item, index) in TextReading.readlines(@modalpath).Select((value, i) => (value, i))){
-                        @(item + " ")
+                        @((MarkupString)(item + " "))
                         if (item == ""){
                             <br/>
                             <br/>
@@ -25,87 +31,99 @@
             </div>
         </div>
     </div>
+    <style>
+        #main-page{
+            filter: blur(5px) !important;
+        }
+    </style>
 }
 
 @page "/"
 
 <PageTitle>Moogle</PageTitle>
-<div id="main-container" style="margin: 25vh auto">
+<div id="main-page">
+    @* Header *@
+    <div id="main-container" style="margin: 25vh auto">
 
-    <h1 class="maintitle">
-        <span style="color: rgb(26,115,232)">M</span>
-        <span style="color: rgb(224,63,44)" >o</span>
-        <span style="color: rgb(252,196,36)">o</span>
-        <span style="color: rgb(26,115,232)">g</span>
-        <span style="color: rgb(63,149,69)" >l</span>
-        <span style="color: rgb(224,63,44)" >e</span>
-    </h1>
-    
-    <div class="container-form">
-        <input id="form-input"
-                class="p-1 my-4" 
-                @bind="query" 
-                placeholder="Haz una búsqueda en Moogle ;)" 
-                @onkeyup="@Enter"
-                @oninput="@(e=> {query=(string)e.Value;})"
-                >
-        <span class="material-symbols-outlined"  
-              @onclick="RunQuery"
-              id="search-icon"
-              >search</span>
-        @if(query!=""){
+        <h1 class="maintitle">
+            <span style="color: rgb(26,115,232)">M</span>
+            <span style="color: rgb(224,63,44)" >o</span>
+            <span style="color: rgb(252,196,36)">o</span>
+            <span style="color: rgb(26,115,232)">g</span>
+            <span style="color: rgb(63,149,69)" >l</span>
+            <span style="color: rgb(224,63,44)" >e</span>
+        </h1>
+        
+        <div class="container-form">
+            <input id="form-input"
+                    class="p-1 my-4" 
+                    @bind="query" 
+                    placeholder="Haz una búsqueda en Moogle ;)" 
+                    @onkeyup="@Enter"
+                    @oninput="@(e=> {query=(string)e.Value;})"
+                    >
             <span class="material-symbols-outlined"  
-                @onclick="@(e => {query="";})"
-                id="clear-icon"
-                >close</span>
-        }
+                @onclick="RunQuery"
+                id="search-icon"
+                >search</span>
+            @if(query!=""){
+                <span class="material-symbols-outlined"  
+                    @onclick="@(e => {query="";})"
+                    id="clear-icon"
+                    >close</span>
+            }
+            
+        </div>
         
     </div>
-    
-</div>
 
-
-@if (!string.IsNullOrEmpty(result.Suggestion)) {
-    <style>
-        #main-container{
-            margin: 0 !important;  
-        }
-        .maintitle{
-            font-size: 4rem !important;
-        }
-    </style>
-    <hr style="margin-top: -10px">
-    <div class="suggestion">
-        <p>¿Quisiste decir 
-            <strong>
-                <a class="suggestion-a" 
-                   @onclick="@( e => {query= result.Suggestion; RunQuery();})" 
-                   >@result.Suggestion</a>
-            </strong>?
-        </p>
-    </div>
-}
-
-<div class="results">
-@foreach (var item in result.Items()) {
-    @if(item.Score!=0){
-
-        <div class="container-item">
-            <a class="item" @onclick="@(e => openmodal(item.Title, item.Path))" >
-                <div >
-                    <h3 class="title">@item.Title</h3>
-                    <p>... @item.Snippet ...</p>
-                </div>
-            </a>
+    @* Sugerencias *@
+    @if (!string.IsNullOrEmpty(result.Suggestion)) {
+        <style>
+            #main-container{
+                margin: 0 !important;  
+            }
+            .maintitle{
+                font-size: 4rem !important;
+            }
+        </style>
+        <hr style="margin-top: -10px">
+        <div class="suggestion">
+            <p>¿Quisiste decir 
+                <strong>
+                    <a class="suggestion-a" 
+                    @onclick="@( e => {query= result.Suggestion; RunQuery();})" 
+                    >@result.Suggestion</a>
+                </strong>?
+            </p>
         </div>
     }
-}
+
+    @* Resultados *@
+    <div class="results">
+        @foreach (var item in result.Items()) {
+            @if(item.Score!=0){
+
+                <div class="container-item">
+                    <a class="item" @onclick="@(e => openmodal(item.Title, item.Path))" >
+                        <div >
+                            <h3 class="title">@item.Title</h3>
+                            <p style="margin: 0;">... @item.Snippet ...</p>
+                            <p style="text-align: right;">@((float)item.Score)</p>
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+    </div>
+    
+    @* No se encontraron Resultados *@
+    @if(result.Suggestion=="Moogle*"){
+        <h4>Lo sentimos no se encontraron coincidecias :(</h4>
+    }
 </div>
 
-@if(result.Suggestion=="Moogle*"){
-    <h4>Lo sentimos no se encontraron coincidecias :(</h4>
-}
-
+@* Codigo C# *@
 @code {
     [Inject] private IJSRuntime _js { get; set; }
 
@@ -128,9 +146,9 @@
     }
     private async Task RunQuery() {
         if(query!=""){
-            Moogle.loading=true;
+            MoogleEngine.Moogle.loading=true;
             result = Moogle.Query(query);
-            Moogle.loading=false;
+            MoogleEngine.Moogle.loading=false;
         }
         else
             await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");

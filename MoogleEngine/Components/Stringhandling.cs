@@ -21,7 +21,7 @@ public class StringHandling {
         }
         return M[s1.Length, s2.Length];
     }
-    //this method make the string normal
+    //this method makes the string normal
     public static string normalize(string s, string param=""){
             string copys = s.ToLower();
             string result="";
