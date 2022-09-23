@@ -4,6 +4,7 @@ public class DataVector {
     public List<string[]> TokenList= new List<string[]>();
     public Dictionary<string, string> possibletokens= new Dictionary<string, string>();
     public Dictionary<string, double>[] TF= new Dictionary<string,double>[0];
+    public Dictionary<string, List<int>>[] Pos= new Dictionary<string, List<int>>[0];
     public Dictionary<string, double> words= new Dictionary<string, double>();
     public int n= 0;
     private void fill(){
@@ -17,8 +18,11 @@ public class DataVector {
         }
 
     }
-    public Dictionary<string,double> ex_tf(string[] tokens){
+    public Dictionary<string,double> ex_tf(string[] tokens, int i){
+
         Dictionary<string, double> dic= new Dictionary<string, double>();
+        Dictionary<string, List<int>> pos= new Dictionary<string, List<int>>();
+
         int maxfreq = 0;
         for(int j=0; j<tokens.Length; j++){
             string w= StringHandling.normalize(tokens[j]);
@@ -31,14 +35,18 @@ public class DataVector {
             if(ss!=""){
                 if(dic.ContainsKey(ss)){
                     dic[ss]++;
+                    pos[ss].Add(j);
                 } 
                 else {
                      dic.Add(ss, 1.0);
+                     pos.Add(ss, new List<int>());
+                     pos[ss].Add(j);
                 }
                 maxfreq = Math.Max(maxfreq ,(int)dic[ss]);
             }
         }
 
+        Pos[i]=pos;
         foreach(KeyValuePair<string, double> pair in dic){
             dic[pair.Key]= (double)(dic[pair.Key]/(maxfreq*(-1.0)));
         } 
@@ -46,8 +54,9 @@ public class DataVector {
     }
     private void filltf(){
         TF = new Dictionary<string, double>[n];
+        Pos = new Dictionary<string, List<int>> [n];
         for(int i=0; i<n; i++){
-            TF[i]= ex_tf(TokenList[i]);
+            TF[i]= ex_tf(TokenList[i],i);
         } 
     }
     private void fillidf(){
@@ -78,7 +87,8 @@ public class DataVector {
                                         Dictionary<string, double> B, 
                                         Dictionary<string, bool> C,
                                         List<string[]> D,
-                                        Dictionary<string, bool> E){
+                                        Dictionary<string, bool> E,
+                                        Dictionary<string,List<int>> F){
 
         foreach(KeyValuePair<string,bool> pair in E){
             if(pair.Value && !B.ContainsKey(pair.Key))
@@ -98,6 +108,19 @@ public class DataVector {
                 sumad+= Math.Pow(B[pair.Key],2); 
             } 
         }
+        for(int i=0;i<D.Count();i++){
+            List<List<int>> dist= new List<List<int>>();
+            int mx=0;
+            for(int j=0;j<D[i].Length;j++){
+                if(F.ContainsKey(D[i][j])){
+                    dist.Add(F[D[i][j]]);
+                    mx=Math.Max(mx,F[D[i][j]].Count());
+                }
+            }
+            double num=DScore(dist);
+            sumad+= num/mx;
+            
+        }
         
         
         double result = (sumad!=0 && sumaq!=0)? sumaw/(Math.Sqrt(sumad)*Math.Sqrt(sumaq)): 0;
@@ -112,7 +135,54 @@ public class DataVector {
         }
         return ans;
     }
-
+    public static double DScore(List<List<int>> V){
+        double freq=0;
+        int n=V.Count();
+        int[] pos= new int[n];
+        int[] num;
+        while(Validate(pos,V)){
+            num= new int[n];
+            int minimun=int.MaxValue;
+            int posmin=0;
+            for(int i=0;i<n;i++){
+                num[i]=V[i][pos[i]];
+                if(minimun>=num[i] && pos[i]<V[i].Count()-1){
+                    minimun=num[i];
+                    posmin=i;
+                }             
+            }
+            double mediaa= media(num);
+            int cont=0;
+            for(int i=0;i<n;i++){
+                if(num[i]-mediaa<5)
+                    cont++;
+            }
+            freq+=cont/n;
+            pos[posmin]++;
+        }
+        return freq;
+        
+    }
+    public static bool Validate(int[] pos, List<List<int>> V){
+        bool finish=true;
+        for(int i=0;i<pos.Length;i++){
+            if(pos[i]!=V[i].Count()-1)
+                finish=false;
+        }
+        if(finish)
+            return false;
+        return true;
+    }
+    public static double media(int[] array){
+        int n=array.Length;
+        double suma=0;
+        if(n==0)
+            return 0;
+        for(int i=0;i<n;i++)
+            suma+=array[i];
+        suma/=(double)n;
+        return suma;
+    }
     
     public DataVector(){
         fill();

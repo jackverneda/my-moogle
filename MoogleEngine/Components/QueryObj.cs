@@ -41,8 +41,8 @@ public class QueryObj {
                 if(closeOp){
                     string[] sarray=tokens[i].Split('~');
                     for(int j=0;j<sarray.Length;j++){
-                        sarray[i]=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(sarray[i]));
-                        NoneOp.Add(sarray[i],1);  
+                        sarray[j]=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(sarray[j]));
+                        NoneOp.Add(sarray[j],1);  
                     }
                     closerwords.Add(sarray);                 
                 }
@@ -78,7 +78,7 @@ public class QueryObj {
 
         List<KeyValuePair<double, int>> response = new  List<KeyValuePair<double, int>>();
         for(int i=0; i < A.n;i++){
-            double result = DataVector.CompatibleScore(NoneOp,A.TF[i],Rel,closerwords, Existance);
+            double result = DataVector.CompatibleScore(NoneOp,A.TF[i],Rel,closerwords, Existance, A.Pos[i]);
             response.Add(new KeyValuePair<double, int>(result, i));
         }
 
