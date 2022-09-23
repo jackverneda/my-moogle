@@ -25,6 +25,11 @@ public class QueryObj {
                 Rel.Add(MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(0,tokens[i].Length-1))), true);
             else if(tokens[i][0]=='!')
                 Existance.Add(MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(1))), false);
+            else if(tokens[i][0]=='^'){
+                string aux=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(1)));
+                Existance.Add(aux, true);
+                NoneOp.Add(aux, 1);
+            }
             else{
                 bool closeOp=false;
                 for(int j=0;j<tokens[i].Length;j++){
@@ -73,7 +78,7 @@ public class QueryObj {
 
         List<KeyValuePair<double, int>> response = new  List<KeyValuePair<double, int>>();
         for(int i=0; i < A.n;i++){
-            double result = DataVector.CompatibleScore(NoneOp,A.TF[i],Rel,closerwords);
+            double result = DataVector.CompatibleScore(NoneOp,A.TF[i],Rel,closerwords, Existance);
             response.Add(new KeyValuePair<double, int>(result, i));
         }
 

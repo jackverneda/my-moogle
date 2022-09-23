@@ -77,7 +77,16 @@ public class DataVector {
     public static double CompatibleScore(Dictionary<string, double> A, 
                                         Dictionary<string, double> B, 
                                         Dictionary<string, bool> C,
-                                        List<string[]> D){
+                                        List<string[]> D,
+                                        Dictionary<string, bool> E){
+
+        foreach(KeyValuePair<string,bool> pair in E){
+            if(pair.Value && !B.ContainsKey(pair.Key))
+                return 0;
+            else if(!pair.Value && B.ContainsKey(pair.Key))
+                return 0;
+        }
+        
         double sumaw= dot(A,B);
         double sumad= dot(B,B);
         double sumaq= dot(A,B);
@@ -89,6 +98,7 @@ public class DataVector {
                 sumad+= Math.Pow(B[pair.Key],2); 
             } 
         }
+        
         
         double result = (sumad!=0 && sumaq!=0)? sumaw/(Math.Sqrt(sumad)*Math.Sqrt(sumaq)): 0;
         return (result>=0)? result : 0 ;    
