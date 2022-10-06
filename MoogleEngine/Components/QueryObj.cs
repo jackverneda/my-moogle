@@ -1,15 +1,18 @@
 
+
 public class QueryObj {
     private string[] wordsq;
     private string query;
     private Dictionary<string,List<string>> stemsyn = new Dictionary<string,List<string> > ();
     // revisar la estructura existance
     private Dictionary<string, bool> Existance =new Dictionary<string, bool> ();
-    private Dictionary<string, bool> Rel = new Dictionary<string, bool> ();
+    private Dictionary<string, int> Rel = new Dictionary<string, int> ();
     private Dictionary<string, double> NoneOp= new Dictionary<string, double>();
     private List<string[]> closerwords= new List<string[]>();
     private Dictionary<string,string> sustitution = new Dictionary<string, string>();
     private int maxfreqTF=1;
+    public List<string> tosnippet= new List<string>();
+    public int index_snippet=0;
     public QueryObj(string q){
         query=q;
         wordsq = q.Split(' ',',','.');
@@ -21,14 +24,25 @@ public class QueryObj {
         for(int i=0;i<tokens.Length;i++){
             if(tokens[i][0]=='!' && tokens[i][tokens[i].Length-1]=='*')
                 throw new Exception("No pueden usarse operadores de no existencia y de relevancia sobre la misma palabra");
-            else if(tokens[i][tokens[i].Length-1]=='*')
-                Rel.Add(MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(0,tokens[i].Length-1))), true);
+            else if(tokens[i][tokens[i].Length-1]=='*'){
+                int cont=0;
+                for(int j=tokens[i].Length-1;j>=0;j++){
+                    if(tokens[i][j]!='*')
+                        break;
+                    cont++;
+                }
+
+                string aux=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(0,tokens[i].Length-cont)));
+                Rel.Add(aux, cont);
+                tosnippet.Add(aux);
+            }
             else if(tokens[i][0]=='!')
                 Existance.Add(MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(1))), false);
             else if(tokens[i][0]=='^'){
                 string aux=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(1)));
                 Existance.Add(aux, true);
                 NoneOp.Add(aux, 1);
+                tosnippet.Add(aux);
             }
             else{
                 bool closeOp=false;
@@ -42,14 +56,17 @@ public class QueryObj {
                     string[] sarray=tokens[i].Split('~');
                     for(int j=0;j<sarray.Length;j++){
                         sarray[j]=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(sarray[j]));
-                        NoneOp.Add(sarray[j],1);  
+                        NoneOp.Add(sarray[j],1);
+                        tosnippet.Add(sarray[j]);
                     }
                     closerwords.Add(sarray);                 
                 }
                 else {
                     string ss=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i]) );
-                    if(!Rel.ContainsKey(ss) && !Existance.ContainsKey(ss) && !NoneOp.ContainsKey(ss))
+                    if(!Rel.ContainsKey(ss) && !Existance.ContainsKey(ss) && !NoneOp.ContainsKey(ss)){
                         NoneOp.Add(ss, 1);
+                        tosnippet.Add(ss);
+                    }
                     else if(NoneOp.ContainsKey(ss)){
                         NoneOp[ss]++;
                         maxfreqTF=Math.Max(maxfreqTF,(int)NoneOp[ss]);
@@ -60,15 +77,17 @@ public class QueryObj {
 
     }
    
-    public KeyValuePair<string,List<KeyValuePair<double, int>>> getresponse(string query, DataVector A){
+    public KeyValuePair<string,List<Response>> getresponse(string query, DataVector A){
         
         //IDF to the query
+        List<string> Wrong= new List<string>();
+
         foreach(KeyValuePair<string, double> pair in NoneOp){
             double a = 0.0;
             if(A.words.ContainsKey(pair.Key))
                 a= A.words[pair.Key];
             else{
-                ValidatorNoneOp(pair.Key,A);
+                Wrong.Add(pair.Key);
                 continue;
             }
 
@@ -76,12 +95,40 @@ public class QueryObj {
             NoneOp[pair.Key] =  (0.4 + (0.6)*NoneOp[pair.Key])*a;     
         }
 
-        List<KeyValuePair<double, int>> response = new  List<KeyValuePair<double, int>>();
+        for(int i=0;i<Wrong.Count;i++)
+            ValidatorNoneOp(Wrong[i],A);
+
+        List<Response> response = new  List<Response>();
         for(int i=0; i < A.n;i++){
             double result = DataVector.CompatibleScore(NoneOp,A.TF[i],Rel,closerwords, Existance, A.Pos[i]);
-            response.Add(new KeyValuePair<double, int>(result, i));
-        }
 
+            if(result<0.21)
+                continue;
+
+            Console.WriteLine(A.docpaths[i]);
+
+            List<List<int>> dist= new List<List<int>>();
+            for(int j=0;j<tosnippet.Count();j++){
+                if(!NoneOp.ContainsKey(tosnippet[j]) && !Rel.ContainsKey(tosnippet[j]))
+                    continue;
+                if(NoneOp.ContainsKey(tosnippet[j]) && NoneOp[tosnippet[j]]<0.2)
+                    continue;
+
+                if(A.Pos[i].ContainsKey(tosnippet[j]))
+                    dist.Add(A.Pos[i][tosnippet[j]]);
+            }
+                
+            int snippet=(int)DataVector.DScore(dist, true);
+            int pos=snippet-1;
+
+            for(int k=0;k<snippet;k++)
+                pos+=A.TokenList[i][k].Length;
+
+            Console.WriteLine(pos);
+
+            response.Add(new Response((float)result, i, A.docpaths[i], pos>=0? pos: 0));
+        }
+    
         string suggestion="";
         for(int i=0;i<wordsq.Length;i++){
             if(sustitution.ContainsKey(wordsq[i]))
@@ -90,9 +137,10 @@ public class QueryObj {
                 suggestion += StringHandling.normalize(wordsq[i]) +" ";
         }
 
-        response.Sort((x,y) => x.Key.CompareTo(y.Key));
+
+        response.Sort((x,y) => x.Score.CompareTo(y.Score));
         response.Reverse();
-        return new KeyValuePair< string, List<KeyValuePair<double,int>> > (suggestion, response);
+        return new KeyValuePair< string, List<Response> > (suggestion, response);
     }
 
     private void ValidatorNoneOp(string token, DataVector A){
@@ -108,21 +156,25 @@ public class QueryObj {
                 }
             }
         
-            int nsimword = 1;
+            int nsimword = ss.Length/2;
             string simword=ss;
             double vsimword= 0;
             string stem= token;
 
             
             foreach(KeyValuePair<string,string> pair in A.possibletokens){
-                int edscore=StringHandling.EditDistance(StringHandling.normalize(pair.Key) , StringHandling.normalize(ss));
+                int edscore=StringHandling.EditDistance(StringHandling.normalize(pair.Key) , ss);
+                if(!A.words.ContainsKey(pair.Value))
+                    continue;
                 double vscore=A.words[pair.Value];
+
                 if(edscore<nsimword){
                     simword=pair.Key;
                     nsimword=edscore;
                     vsimword=vscore;
                     stem=pair.Value;
                 }
+
                 else if((edscore==nsimword) && (vscore>vsimword)){
                     simword=pair.Key;
                     nsimword=edscore;
@@ -135,6 +187,7 @@ public class QueryObj {
                 NoneOp.Remove(token);
                 NoneOp.Add(stem,vsimword);
                 sustitution.Add(ss,simword);
+                tosnippet.Add(stem);
             }
                     
 

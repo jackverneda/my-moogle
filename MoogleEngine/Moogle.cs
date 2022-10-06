@@ -7,26 +7,26 @@ public static class Moogle
     public static DataVector A = new DataVector();
     public static SearchResult Query(string query) {
         QueryObj Q=new QueryObj(query);
-        KeyValuePair<string,List<KeyValuePair<double, int>>> V = Q.getresponse(query, A);
+        KeyValuePair<string,List<Response>> V = Q.getresponse(query, A);
         int n =  V.Value.Count;
         SearchItem[] items = new SearchItem[n];
 
-        if(V.Value[0].Key==0){
+        if(V.Value.Count==0){
             loading = false;
+            Console.WriteLine("vacio");
             return new SearchResult(new SearchItem[0], "Moogle*");
-            
         }
         
         for(int i=0; i<n;i++){
-
-            string path=A.docpaths[V.Value[i].Value];
-            string doc=TextReading.readdoc(path);
+            string doc=TextReading.readdoc(V.Value[i].Path);
             int size=doc.Length;
-            string[] patharray=path.Split('/');
-            string title=patharray[patharray.Length-1];
-            title=title.Substring(0,title.Length-4);
-
-            items[i]= new SearchItem(title, doc.Substring(0,Math.Min(500,size)),((float)V.Value[i].Key),path);
+            
+            items[i]= new SearchItem(
+                V.Value[i].Title, 
+                doc.Substring(V.Value[i].SnippetIndex,Math.Min(500,size)),
+                V.Value[i].Score,
+                V.Value[i].Path
+            );
 
         }
 

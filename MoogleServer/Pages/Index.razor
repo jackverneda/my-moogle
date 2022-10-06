@@ -63,7 +63,7 @@
                     @oninput="@(e=> {query=(string)e.Value;})"
                     >
             <span class="material-symbols-outlined"  
-                @onclick="RunQuery"
+                @onclick="@(()=> exR() )"
                 id="search-icon"
                 >search</span>
             @if(query!=""){
@@ -92,7 +92,7 @@
             <p>¿Quisiste decir 
                 <strong>
                     <a class="suggestion-a" 
-                    @onclick="@( e => {query= result.Suggestion; RunQuery();})" 
+                        @onclick="@(() => exR(result.Suggestion))" 
                     >@result.Suggestion</a>
                 </strong>?
             </p>
@@ -125,26 +125,28 @@
 
 @* Codigo C# *@
 @code {
-    [Inject] private IJSRuntime _js { get; set; }
+    [Inject] private static IJSRuntime _js { get; set; }
 
-    private string query = "";
-    private bool modal= false;
-    private string modalpath= "";
-    private string modaltitle= "";
+    private static string query = "";
+    private static bool modal= false;
+    private static string modalpath= "";
+    private static string modaltitle= "";
     
-    private SearchResult result = new SearchResult();
-
-    private void closemodal(){
+    private static SearchResult result = new SearchResult();
+    
+    private static void closemodal(){
         modal=false;
         modalpath="";
         modaltitle="";
     }
-    private void openmodal(string a, string b){
+    private static void openmodal(string a, string b){
         modal=true;
         modaltitle=a;
         modalpath = b;
     }
-    private async Task RunQuery() {
+    private static async Task RunQuery(string q="") {
+        if(q!="")
+            query=q;
         if(query!=""){
             MoogleEngine.Moogle.loading=true;
             result = Moogle.Query(query);
@@ -153,10 +155,14 @@
         else
             await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");
     }
-
-    public void Enter(KeyboardEventArgs e){
+    public static void exR(string q=""){
+        RunQuery(q);
+        MoogleEngine.Moogle.loading=false;
+    }
+    public static void Enter(KeyboardEventArgs e){
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
             RunQuery();
+        MoogleEngine.Moogle.loading=false;
     }   
 }
 

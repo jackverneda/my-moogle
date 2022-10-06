@@ -85,7 +85,7 @@ public class DataVector {
     //Calculates the cos between two vectors
     public static double CompatibleScore(Dictionary<string, double> A, 
                                         Dictionary<string, double> B, 
-                                        Dictionary<string, bool> C,
+                                        Dictionary<string, int> C,
                                         List<string[]> D,
                                         Dictionary<string, bool> E,
                                         Dictionary<string,List<int>> F){
@@ -101,10 +101,10 @@ public class DataVector {
         double sumad= dot(B,B);
         double sumaq= dot(A,B);
      
-        foreach(KeyValuePair<string, bool> pair in C){
-            sumaq+=4;
+        foreach(KeyValuePair<string, int> pair in C){
+            sumaq+=pair.Value;
             if(B.ContainsKey(pair.Key)){
-                sumaw+= 2*B[pair.Key];
+                sumaw+= pair.Value*B[pair.Key];
                 sumad+= Math.Pow(B[pair.Key],2); 
             } 
         }
@@ -135,15 +135,23 @@ public class DataVector {
         }
         return ans;
     }
-    public static double DScore(List<List<int>> V){
+    public static double DScore(List<List<int>> V,bool snippet= false){
         double freq=0;
         int n=V.Count();
         int[] pos= new int[n];
         int[] num;
+        int max=0;
+        int ans=0;
+        int norma=5;
+
+        if(snippet)
+            norma=20;
+
         while(Validate(pos,V)){
             num= new int[n];
             int minimun=int.MaxValue;
             int posmin=0;
+
             for(int i=0;i<n;i++){
                 num[i]=V[i][pos[i]];
                 if(minimun>=num[i] && pos[i]<V[i].Count()-1){
@@ -151,14 +159,26 @@ public class DataVector {
                     posmin=i;
                 }             
             }
+
             double mediaa= media(num);
             int cont=0;
             for(int i=0;i<n;i++){
-                if(num[i]-mediaa<5)
+                if(Math.Abs(num[i]-mediaa)<norma)
                     cont++;
+            } 
+
+            if(snippet && cont>max){
+                max=cont;
+                ans=num[posmin];
+                if(max==n)
+                    break;
             }
+            
             freq+=cont/n;
             pos[posmin]++;
+        }
+        if(snippet){
+            return ans; 
         }
         return freq;
         
