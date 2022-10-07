@@ -1,5 +1,5 @@
 ﻿@* Spinner (Cargando) *@
-@if(MoogleEngine.Moogle.loading){
+@if(spinnerloading){
     <div class="backdrop-container bdc-white"  >
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>    
     </div>
@@ -126,7 +126,7 @@
 @* Codigo C# *@
 @code {
     [Inject] private  IJSRuntime _js { get; set; }
-
+    public bool spinnerloading= false;
     private string query = "";
     private bool modal= false;
     private string modalpath= "";
@@ -144,17 +144,17 @@
         modaltitle=a;
         modalpath = b;
     }
-    private async Task RunQuery(string q="") {
+    private void RunQuery(string q="") {
         if(q!="")
             query=q;
 
         if(query!=""){
-            MoogleEngine.Moogle.loading=true;
+            spinnerloading=true;
             result = Moogle.Query(query);
-            MoogleEngine.Moogle.loading=false;
+            spinnerloading=false;
         }
-        else
-            await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");
+        @* else
+            await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input"); *@
     }
     public void exR(string q=""){
         RunQuery(q);
@@ -163,7 +163,7 @@
     public void Enter(KeyboardEventArgs e){
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
             RunQuery();
-        MoogleEngine.Moogle.loading=false;
+        spinnerloading=false;
     }   
 }
 

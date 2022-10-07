@@ -22,6 +22,8 @@ public class QueryObj {
 
     private void oprerators(string[] tokens) {
         for(int i=0;i<tokens.Length;i++){
+            if(tokens[i]=="")
+                continue;
             if(tokens[i][0]=='!' && tokens[i][tokens[i].Length-1]=='*')
                 throw new Exception("No pueden usarse operadores de no existencia y de relevancia sobre la misma palabra");
             else if(tokens[i][tokens[i].Length-1]=='*'){
