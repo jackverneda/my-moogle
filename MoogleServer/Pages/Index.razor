@@ -125,28 +125,29 @@
 
 @* Codigo C# *@
 @code {
-    [Inject] private static IJSRuntime _js { get; set; }
+    [Inject] private  IJSRuntime _js { get; set; }
 
-    private static string query = "";
-    private static bool modal= false;
-    private static string modalpath= "";
-    private static string modaltitle= "";
+    private string query = "";
+    private bool modal= false;
+    private string modalpath= "";
+    private string modaltitle= "";
     
-    private static SearchResult result = new SearchResult();
+    private SearchResult result = new SearchResult();
     
-    private static void closemodal(){
+    private void closemodal(){
         modal=false;
         modalpath="";
         modaltitle="";
     }
-    private static void openmodal(string a, string b){
+    private  void openmodal(string a, string b){
         modal=true;
         modaltitle=a;
         modalpath = b;
     }
-    private static async Task RunQuery(string q="") {
+    private async Task RunQuery(string q="") {
         if(q!="")
             query=q;
+
         if(query!=""){
             MoogleEngine.Moogle.loading=true;
             result = Moogle.Query(query);
@@ -155,11 +156,11 @@
         else
             await _js.InvokeAsync<bool>("SetFocusByElementId", "form-input");
     }
-    public static void exR(string q=""){
+    public void exR(string q=""){
         RunQuery(q);
         MoogleEngine.Moogle.loading=false;
     }
-    public static void Enter(KeyboardEventArgs e){
+    public void Enter(KeyboardEventArgs e){
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
             RunQuery();
         MoogleEngine.Moogle.loading=false;

@@ -25,14 +25,14 @@ public class QueryObj {
             if(tokens[i][0]=='!' && tokens[i][tokens[i].Length-1]=='*')
                 throw new Exception("No pueden usarse operadores de no existencia y de relevancia sobre la misma palabra");
             else if(tokens[i][tokens[i].Length-1]=='*'){
-                int cont=0;
+                int cont=1;
                 for(int j=tokens[i].Length-1;j>=0;j++){
                     if(tokens[i][j]!='*')
                         break;
                     cont++;
                 }
 
-                string aux=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(0,tokens[i].Length-cont)));
+                string aux=MoogleEngine.Snowball.Stemmer(StringHandling.normalize(tokens[i].Substring(0,tokens[i].Length-cont-1)));
                 Rel.Add(aux, cont);
                 tosnippet.Add(aux);
             }
