@@ -102,7 +102,7 @@ public class DataVector {
         double sumaq= dot(A,B);
      
         foreach(KeyValuePair<string, int> pair in C){
-            sumaq+=pair.Value*pair.Value*pair.Value;
+            sumaq+=Math.Pow(pair.Value,2);
             if(B.ContainsKey(pair.Key)){
                 sumaw+= pair.Value*B[pair.Key];
                 sumad+= Math.Pow(B[pair.Key],2); 
