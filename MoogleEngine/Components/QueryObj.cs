@@ -190,9 +190,12 @@ public class QueryObj {
             }
             if(simword!=ss){
                 NoneOp.Remove(token);
-                NoneOp.Add(stem,vsimword);
-                sustitution.Add(ss,simword);
-                tosnippet.Add(stem);
+                if(!NoneOp.ContainsKey(stem)){
+                    NoneOp.Add(stem,vsimword);
+                    tosnippet.Add(stem);
+                }
+                if(!sustitution.ContainsKey(ss))
+                    sustitution.Add(ss,simword);
             }
                     
 
